@@ -69,10 +69,89 @@ class App:
             index = countries.index(value)
             self.code_lbl.configure(text=codes[index])
         self.country.bind("<<ComboboxSelected>>", selected)
+        
+        def send():
+            
+            # Download the helper library from https://www.twilio.com/docs/python/install
+            import os
+            from twilio.rest import Client
 
-        self.code1 = tk.Entry(self.master,font=("poppins",10),fg='#6b6b6b',bd=2,relief='groove').place(relx=0.14,rely=0.68,width=30,height=40)
+            # Find your Account SID and Auth Token at twilio.com/console
+            # and set the environment variables. See http://twil.io/secure
+            account_sid = os.environ['TWILIO_ACCOUNT_SID']
+            auth_token = os.environ['TWILIO_AUTH_TOKEN']
+            client = Client(account_sid, auth_token)
 
-        self.send_btn = tk.Button(self.master, text="Send OTP", fg='#ffffff',font=('poppins',11,'bold'),bg='#2ae5d8',relief='groove',bd=0,width=30,height=1,activebackground='#2ae5d8',activeforeground='#ffffff')
+            # =====Extract phone number======
+            number = self.phone.get()
+            if number[0] == "0":
+                removezero = number[1:]
+                phonenumber = self.code_lbl.cget("text")+removezero
+            else:
+                phonenumber = self.code_lbl.cget("text")+number
+            #======Send verification code============
+            verification = client.verify \
+                                .services('VA0aa639a4f3fffa332050d2e1f49496ba') \
+                                .verifications \
+                                .create(to=phonenumber, channel='sms')
+            print(verification.status)
+
+            def verify():
+                code_input = number1.get()+number2.get(),number3.get()+number4.get()+number5.get()+number6.get()
+                verification_check = client.verify \
+                           .services('VA0aa639a4f3fffa332050d2e1f49496ba') \
+                           .verification_checks \
+                           .create(to=phonenumber, code=code_input)
+
+                print(verification_check.status)
+
+            self.send_btn.place_configure(relx=0.095,rely=0.8)
+            self.send_btn.configure(text='Verify',command=verify)
+
+            def change(*args,**kwargs):
+                if number1.get() != "" and isinstance(int(number1.get()), int):
+                    self.code2.focus()
+                if number2.get() != "" and isinstance(int(number2.get()), int):
+                    self.code3.focus()
+                if number3.get() != "" and isinstance(int(number3.get()), int):
+                    self.code4.focus()
+                if number4.get() != "" and isinstance(int(number4.get()), int):
+                    self.code5.focus()
+                if number5.get() != "" and isinstance(int(number5.get()), int):
+                    self.code6.focus()
+                if number6.get() != "" and isinstance(int(number6.get()), int):
+                    self.send_btn.focus()
+            
+            number1 = tk.StringVar()
+            number2 = tk.StringVar()
+            number3 = tk.StringVar()
+            number4 = tk.StringVar()
+            number5 = tk.StringVar()
+            number6 = tk.StringVar()
+
+            number1.trace("w", lambda l, idx, mode: change())
+            number2.trace("w", lambda l, idx, mode: change())
+            number3.trace("w", lambda l, idx, mode: change())
+            number4.trace("w", lambda l, idx, mode: change())
+            number5.trace("w", lambda l, idx, mode: change())
+            number6.trace("w", lambda l, idx, mode: change())
+
+            
+            self.code1 = tk.Entry(self.master,font=("poppins",13,'bold'),textvariable=number1,bd=2,relief='groove')
+            self.code1.place(relx=0.095,rely=0.68,width=30,height=40)
+            self.code1.focus()
+            self.code2 = tk.Entry(self.master,font=("poppins",13,'bold'),textvariable=number2,bd=2,relief='groove')
+            self.code2.place(relx=0.15,rely=0.68,width=30,height=40)
+            self.code3 = tk.Entry(self.master,font=("poppins",13,'bold'),textvariable=number3,bd=2,relief='groove')
+            self.code3.place(relx=0.205,rely=0.68,width=30,height=40)
+            self.code4 = tk.Entry(self.master,font=("poppins",13,'bold'),textvariable=number4,bd=2,relief='groove')
+            self.code4.place(relx=0.26,rely=0.68,width=30,height=40)
+            self.code5 = tk.Entry(self.master,font=("poppins",13,'bold'),textvariable=number5,bd=2,relief='groove')
+            self.code5.place(relx=0.315,rely=0.68,width=30,height=40)
+            self.code6 = tk.Entry(self.master,font=("poppins",13,'bold'),textvariable=number6,bd=2,relief='groove')
+            self.code6.place(relx=0.37,rely=0.68,width=30,height=40)
+
+        self.send_btn = tk.Button(self.master, text="Send OTP", fg='#ffffff',font=('poppins',11,'bold'),bg='#2ae5d8',relief='groove',bd=0,width=30,height=1,activebackground='#2ae5d8',activeforeground='#ffffff',command=send)
         self.send_btn.place(relx=0.095,rely=0.7)
 
 if __name__=='__main__':
