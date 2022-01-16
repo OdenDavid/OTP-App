@@ -45,6 +45,7 @@ class App:
         for item in data:
             countries.append(item['name'])
             codes.append(item['dial_code'])
+
         self.country = ttk.Combobox(self.master,width=30,font=("poppins",10))
         self.country['values'] = (countries)                        
         self.country.insert(0,"Nigeria")
@@ -55,14 +56,11 @@ class App:
 
         self.code_lbl = tk.Label(self.master, text='+234', font=('poppins',9),relief='groove',bd=1)
         self.code_lbl.place(relx=0.095,rely=0.567,width=40,height=30)
-        self.phone = tk.Entry(self.master,width=30,font=("poppins",10),fg='#6b6b6b',bd=2,relief='groove')
+        self.phone = tk.Entry(self.master,width=30,font=("poppins",10),fg='#000000',bd=2,relief='groove')
         self.phone.place(relx=0.14,rely=0.57,width=237,height=29)
         self.phone_lbl = tk.Label(self.master, text="Enter your phone number", font=('poppins',9,'bold'),bg='#ffffff')
         self.phone_lbl.place(relx=0.095,rely=0.535)
-        # Place Holder for text widget
-        self.phone.insert(tk.END,'81-5454-9452')
-        self.phone.bind("<FocusIn>", lambda args: (self.phone.delete("0",tk.END),self.phone.configure(fg='#000000')))
-        self.phone.bind("<FocusOut>", lambda args: (self.phone.insert(tk.END,'81-5454-9452'),self.phone.configure(fg='#6b6b6b')))
+        
         
         def selected(event):
             value = event.widget.get()
@@ -72,42 +70,6 @@ class App:
         
         def send():
             
-            # Download the helper library from https://www.twilio.com/docs/python/install
-            import os
-            from twilio.rest import Client
-
-            # Find your Account SID and Auth Token at twilio.com/console
-            # and set the environment variables. See http://twil.io/secure
-            account_sid = os.environ['TWILIO_ACCOUNT_SID']
-            auth_token = os.environ['TWILIO_AUTH_TOKEN']
-            client = Client(account_sid, auth_token)
-
-            # =====Extract phone number======
-            number = self.phone.get()
-            if number[0] == "0":
-                removezero = number[1:]
-                phonenumber = self.code_lbl.cget("text")+removezero
-            else:
-                phonenumber = self.code_lbl.cget("text")+number
-            #======Send verification code============
-            verification = client.verify \
-                                .services('VA0aa639a4f3fffa332050d2e1f49496ba') \
-                                .verifications \
-                                .create(to=phonenumber, channel='sms')
-            print(verification.status)
-
-            def verify():
-                code_input = number1.get()+number2.get(),number3.get()+number4.get()+number5.get()+number6.get()
-                verification_check = client.verify \
-                           .services('VA0aa639a4f3fffa332050d2e1f49496ba') \
-                           .verification_checks \
-                           .create(to=phonenumber, code=code_input)
-
-                print(verification_check.status)
-
-            self.send_btn.place_configure(relx=0.095,rely=0.8)
-            self.send_btn.configure(text='Verify',command=verify)
-
             def change(*args,**kwargs):
                 if number1.get() != "" and isinstance(int(number1.get()), int):
                     self.code2.focus()
@@ -136,7 +98,6 @@ class App:
             number5.trace("w", lambda l, idx, mode: change())
             number6.trace("w", lambda l, idx, mode: change())
 
-            
             self.code1 = tk.Entry(self.master,font=("poppins",13,'bold'),textvariable=number1,bd=2,relief='groove')
             self.code1.place(relx=0.095,rely=0.68,width=30,height=40)
             self.code1.focus()
@@ -150,6 +111,54 @@ class App:
             self.code5.place(relx=0.315,rely=0.68,width=30,height=40)
             self.code6 = tk.Entry(self.master,font=("poppins",13,'bold'),textvariable=number6,bd=2,relief='groove')
             self.code6.place(relx=0.37,rely=0.68,width=30,height=40)
+
+
+            # Download the helper library from https://www.twilio.com/docs/python/install
+            import os
+            from twilio.rest import Client
+
+            # Find your Account SID and Auth Token at twilio.com/console
+            # and set the environment variables. See http://twil.io/secure
+            account_sid = os.environ['TWILIO_ACCOUNT_SID']
+            auth_token = os.environ['TWILIO_AUTH_TOKEN']
+            client = Client(account_sid, auth_token)
+            
+            # =====Extract phone number======
+            number = self.phone.get()
+            if number[0] == "0":
+                removezero = number[1:]
+                phonenumber = self.code_lbl.cget("text")+removezero
+            else:
+                phonenumber = self.code_lbl.cget("text")+number
+            #======Send verification code============
+            verification = client.verify \
+                                .services('VA0aa639a4f3fffa332050d2e1f49496ba') \
+                                .verifications \
+                                .create(to=phonenumber, channel='sms')
+
+            self.verification_lbl = tk.Label(self.master,text='',font=('poppins',9),fg='#ffffff',bg='#ffffff',relief='groove',bd=0)
+            self.verification_lbl.place(relx=0,rely=0.96,width=452,height=20)
+            
+            if verification.status == 'pending':
+                self.verification_lbl.configure(text='Sent successfully',fg='#3d7e3b',bg='#7ae176',bd=1)
+            elif verification.status == 'canceled':
+                self.verification_lbl.configure(text='Send failed',fg='#3d7e3b',bg='#c01111',bd=1)
+
+            def verify():
+                code_input = number1.get() + number2.get() + number3.get() + number4.get() + number5.get() + number6.get()
+                print(code_input)
+                verification_check = client.verify \
+                           .services('VA0aa639a4f3fffa332050d2e1f49496ba') \
+                           .verification_checks \
+                           .create(to=phonenumber, code=code_input)
+
+                if verification_check.status == 'approved':
+                    self.verification_lbl.configure(text='Confirmed',fg='#3d7e3b',bg='#7ae176',bd=1)
+                elif verification.status == 'canceled':
+                    self.verification_lbl.configure(text='Send failed',fg='#3d7e3b',bg='#c01111',bd=1)
+
+            self.send_btn.place_configure(relx=0.095,rely=0.8)
+            self.send_btn.configure(text='Verify',command=verify)
 
         self.send_btn = tk.Button(self.master, text="Send OTP", fg='#ffffff',font=('poppins',11,'bold'),bg='#2ae5d8',relief='groove',bd=0,width=30,height=1,activebackground='#2ae5d8',activeforeground='#ffffff',command=send)
         self.send_btn.place(relx=0.095,rely=0.7)
